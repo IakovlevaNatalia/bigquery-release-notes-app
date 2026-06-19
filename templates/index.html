@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A premium tracker for Google Cloud BigQuery Release Notes. Fetch, filter, and share updates on X/Twitter.">
+    <title>BigQuery Release Notes Tracker</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar or Header Background Glows -->
+        <div class="bg-glow bg-glow-1"></div>
+        <div class="bg-glow bg-glow-2"></div>
+
+        <!-- Main Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="logo-container">
+                    <i data-lucide="database" class="logo-icon"></i>
+                    <div class="logo-pulse"></div>
+                </div>
+                <div class="brand-text">
+                    <h1>BigQuery Release Notes</h1>
+                    <div class="status-indicator">
+                        <span class="status-dot pulsing"></span>
+                        <span class="status-text" id="syncStatus">Connected to Google Cloud</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div class="search-box">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="searchInput" placeholder="Search updates, features..." autocomplete="off">
+                    <button id="clearSearchBtn" class="clear-search-btn" title="Clear search" style="display: none;">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                
+                <button id="refreshBtn" class="btn btn-primary btn-sync" title="Sync release notes">
+                    <i data-lucide="rotate-cw" id="syncIcon"></i>
+                    <span>Sync Feed</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Metrics Dashboard -->
+        <section class="metrics-section">
+            <div class="metric-card" id="metricTotal">
+                <div class="metric-icon-wrapper blue">
+                    <i data-lucide="layers"></i>
+                </div>
+                <div class="metric-info">
+                    <span class="metric-label">Total Updates</span>
+                    <h3 class="metric-value" id="valTotal">0</h3>
+                </div>
+            </div>
+            <div class="metric-card" id="metricFeatures">
+                <div class="metric-icon-wrapper green">
+                    <i data-lucide="sparkles"></i>
+                </div>
+                <div class="metric-info">
+                    <span class="metric-label">Features Added</span>
+                    <h3 class="metric-value" id="valFeatures">0</h3>
+                </div>
+            </div>
+            <div class="metric-card" id="metricIssues">
+                <div class="metric-icon-wrapper red">
+                    <i data-lucide="alert-triangle"></i>
+                </div>
+                <div class="metric-info">
+                    <span class="metric-label">Issues & Fixes</span>
+                    <h3 class="metric-value" id="valIssues">0</h3>
+                </div>
+            </div>
+            <div class="metric-card" id="metricLatest">
+                <div class="metric-icon-wrapper gold">
+                    <i data-lucide="calendar"></i>
+                </div>
+                <div class="metric-info">
+                    <span class="metric-label">Latest Release</span>
+                    <h3 class="metric-value" id="valLatest">-</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters Section -->
+        <section class="filters-section">
+            <div class="filter-group">
+                <span class="filter-title">Filter by category:</span>
+                <div class="filter-chips" id="filterChips">
+                    <button class="chip active" data-filter="all" id="chipAll">All <span class="chip-count" id="cntAll">0</span></button>
+                    <button class="chip" data-filter="feature" id="chipFeature">Features <span class="chip-count" id="cntFeature">0</span></button>
+                    <button class="chip" data-filter="issue" id="chipIssue">Issues <span class="chip-count" id="cntIssue">0</span></button>
+                    <button class="chip" data-filter="changed" id="chipChanged">Changes <span class="chip-count" id="cntChanged">0</span></button>
+                    <button class="chip" data-filter="announcement" id="chipAnnouncement">Announcements <span class="chip-count" id="cntAnnouncement">0</span></button>
+                    <button class="chip" data-filter="other" id="chipOther">Other <span class="chip-count" id="cntOther">0</span></button>
+                </div>
+            </div>
+            
+            <div class="view-options">
+                <span class="results-meta" id="resultsCount">Showing all items</span>
+            </div>
+        </section>
+
+        <!-- Main Feed Grid -->
+        <main class="feed-container" id="feedContainer">
+            <!-- Loading Skeleton Screen -->
+            <div class="loading-skeleton">
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+                <div class="skeleton-card"></div>
+            </div>
+        </main>
+        
+        <!-- Error & Empty States -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-icon-wrapper">
+                <i data-lucide="search-code"></i>
+            </div>
+            <h2>No Updates Found</h2>
+            <p>We couldn't find any release notes matching your search or filters. Try adjusting your query or resetting filters.</p>
+            <button id="resetFiltersBtn" class="btn btn-secondary">Reset Filters</button>
+        </div>
+
+        <div class="error-state" id="errorState" style="display: none;">
+            <div class="error-icon-wrapper">
+                <i data-lucide="wifi-off"></i>
+            </div>
+            <h2>Sync Failed</h2>
+            <p id="errorMessage">We encountered an error while fetching the latest release notes from Google Cloud.</p>
+            <button id="retryBtn" class="btn btn-primary">
+                <i data-lucide="refresh-cw"></i> Retry Connection
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>BigQuery Release Notes Tracker &bull; Built with Flask &amp; Vanilla Web Technologies</p>
+            <p class="footer-meta">Data fetched from the official Google Cloud Feed</p>
+        </footer>
+    </div>
+
+    <!-- Tweet Composer Modal -->
+    <div class="modal-overlay" id="tweetModal" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i data-lucide="twitter" class="twitter-icon"></i>
+                    <h2>Share on X / Twitter</h2>
+                </div>
+                <button class="modal-close-btn" id="closeModalBtn" title="Close modal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="note-preview-box">
+                    <span class="preview-tag" id="modalTag">Feature</span>
+                    <span class="preview-date" id="modalDate">June 15, 2026</span>
+                    <p class="preview-snippet" id="modalSnippet">Use Gemini Cloud Assist to analyze your SQL queries...</p>
+                </div>
+                
+                <div class="tweet-composer-field">
+                    <label for="tweetTextarea">Draft your post</label>
+                    <textarea id="tweetTextarea" rows="6" maxlength="280" placeholder="What's happening?"></textarea>
+                    
+                    <div class="composer-meta">
+                        <div class="char-counter">
+                            <span id="charCount">0</span>/280
+                        </div>
+                        <div class="hashtag-suggestions">
+                            <span class="tag-helper" data-tag="#BigQuery">#BigQuery</span>
+                            <span class="tag-helper" data-tag="#GoogleCloud">#GoogleCloud</span>
+                            <span class="tag-helper" data-tag="#DataAnalytics">#DataAnalytics</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelTweetBtn">Cancel</button>
+                <button class="btn btn-twitter" id="shareTweetBtn">
+                    <i data-lucide="send"></i>
+                    <span>Post to X</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
