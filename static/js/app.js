@@ -14,6 +14,7 @@ const feedContainer = document.getElementById('feedContainer');
 const searchInput = document.getElementById('searchInput');
 const clearSearchBtn = document.getElementById('clearSearchBtn');
 const refreshBtn = document.getElementById('refreshBtn');
+const exportCsvBtn = document.getElementById('exportCsvBtn');
 const syncIcon = document.getElementById('syncIcon');
 const syncStatus = document.getElementById('syncStatus');
 const resultsCount = document.getElementById('resultsCount');
@@ -83,6 +84,11 @@ function setupEventListeners() {
     // Refresh button
     refreshBtn.addEventListener('click', () => {
         fetchReleaseNotes(true);
+    });
+
+    // Export CSV button
+    exportCsvBtn.addEventListener('click', () => {
+        exportFilteredToCSV();
     });
 
     // Filter Chips click
@@ -371,10 +377,16 @@ function renderNotesList(notes) {
                         <span>Original Feed</span>
                         <i data-lucide="external-link"></i>
                     </a>
-                    <button class="btn-tweet" onclick="openTweetComposer('${note.id}')">
-                        <i data-lucide="twitter"></i>
-                        <span>Tweet Update</span>
-                    </button>
+                    <div class="card-actions">
+                        <button class="btn-copy" onclick="copyToClipboard('${note.id}', this)" title="Copy update to clipboard">
+                            <i data-lucide="copy"></i>
+                            <span>Copy</span>
+                        </button>
+                        <button class="btn-tweet" onclick="openTweetComposer('${note.id}')">
+                            <i data-lucide="twitter"></i>
+                            <span>Tweet</span>
+                        </button>
+                    </div>
                 </div>
             </article>
         `;
@@ -488,4 +500,101 @@ function handleTweetPost() {
     window.open(tweetUrl, '_blank', 'width=550,height=420,toolbar=0,status=0');
     
     closeTweetModal();
+}
+
+// Copy update details to clipboard
+function copyToClipboard(noteId, buttonElement) {
+    const note = allNotes.find(n => n.id === noteId);
+    if (!note) return;
+
+    const plainContent = stripHtmlTags(note.content);
+    const clipboardText = `BigQuery Release Update [${note.type}] (${note.date}):\n\n${plainContent}\n\nLink: ${note.link}`;
+
+    navigator.clipboard.writeText(clipboardText).then(() => {
+        // Visual feedback
+        const originalHTML = buttonElement.innerHTML;
+        buttonElement.innerHTML = `<i data-lucide="check"></i><span>Copied!</span>`;
+        buttonElement.classList.add('copied');
+        lucide.createIcons();
+
+        setTimeout(() => {
+            buttonElement.innerHTML = originalHTML;
+            buttonElement.classList.remove('copied');
+            lucide.createIcons();
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy to clipboard: ', err);
+        alert('Failed to copy to clipboard. Please check browser permissions.');
+    });
+}
+
+// Export the currently filtered release notes to a CSV file
+function exportFilteredToCSV() {
+    // 1. Get filtered list
+    let filtered = allNotes;
+    if (activeFilter !== 'all') {
+        filtered = filtered.filter(note => normalizeCategory(note.type) === activeFilter);
+    }
+    if (searchQuery) {
+        filtered = filtered.filter(note => {
+            return note.type.toLowerCase().includes(searchQuery) ||
+                   note.date.toLowerCase().includes(searchQuery) ||
+                   note.content.toLowerCase().includes(searchQuery);
+        });
+    }
+
+    if (filtered.length === 0) {
+        alert('No notes in the current view to export.');
+        return;
+    }
+
+    // 2. Build CSV rows
+    const headers = ['ID', 'Date', 'ISO Date', 'Type', 'Content', 'Link'];
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+
+    filtered.forEach(note => {
+        const plainTextContent = stripHtmlTags(note.content);
+        const row = [
+            escapeCSVField(note.id),
+            escapeCSVField(note.date),
+            escapeCSVField(note.iso_date),
+            escapeCSVField(note.type),
+            escapeCSVField(plainTextContent),
+            escapeCSVField(note.link)
+        ];
+        csvRows.push(row.join(','));
+    });
+
+    // Add Byte Order Mark (BOM) for Excel UTF-8 support
+    const csvString = '\uFEFF' + csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    // 3. Trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Generate filename based on filters
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const filterSuffix = activeFilter !== 'all' ? `_${activeFilter}` : '';
+    link.download = `bigquery_release_notes${filterSuffix}_${dateStr}.csv`;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// Helper to escape values for CSV RFC 4180 compatibility
+function escapeCSVField(val) {
+    if (val === null || val === undefined) return '';
+    let str = String(val);
+    // Double quotes inside must be escaped as double-double quotes
+    str = str.replace(/"/g, '""');
+    // Wrap in quotes if it contains commas, quotes, or newlines
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        str = `"${str}"`;
+    }
+    return str;
 }

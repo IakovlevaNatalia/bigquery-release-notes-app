@@ -645,6 +645,50 @@ body {
     height: 14px;
 }
 
+.card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-copy {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition-fast);
+}
+
+.btn-copy:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-copy.copied {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.3);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+}
+
+.btn-copy svg {
+    width: 14px;
+    height: 14px;
+}
+
+.btn-export:hover {
+    border-color: var(--accent-green);
+    color: white;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
 /* Empty & Error States */
 .empty-state, .error-state {
     text-align: center;
