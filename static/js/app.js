@@ -15,6 +15,8 @@ const searchInput = document.getElementById('searchInput');
 const clearSearchBtn = document.getElementById('clearSearchBtn');
 const refreshBtn = document.getElementById('refreshBtn');
 const exportCsvBtn = document.getElementById('exportCsvBtn');
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const themeToggleIcon = document.getElementById('themeToggleIcon');
 const syncIcon = document.getElementById('syncIcon');
 const syncStatus = document.getElementById('syncStatus');
 const resultsCount = document.getElementById('resultsCount');
@@ -56,6 +58,13 @@ const tagHelpers = document.querySelectorAll('.tag-helper');
 
 // Document Ready
 window.addEventListener('DOMContentLoaded', () => {
+    // Check saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        themeToggleIcon.setAttribute('data-lucide', 'moon');
+    }
+
     // Initial Fetch
     fetchReleaseNotes(false);
 
@@ -90,6 +99,9 @@ function setupEventListeners() {
     exportCsvBtn.addEventListener('click', () => {
         exportFilteredToCSV();
     });
+
+    // Theme toggle button
+    themeToggleBtn.addEventListener('click', toggleTheme);
 
     // Filter Chips click
     filterChipsContainer.addEventListener('click', (e) => {
@@ -597,4 +609,16 @@ function escapeCSVField(val) {
         str = `"${str}"`;
     }
     return str;
+}
+
+// Toggle light/dark mode color theme
+function toggleTheme() {
+    const isLightMode = document.body.classList.toggle('light-mode');
+    
+    // Save preference
+    localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+    
+    // Update button icon (if light mode, show moon icon to swap back; if dark, show sun)
+    themeToggleIcon.setAttribute('data-lucide', isLightMode ? 'moon' : 'sun');
+    lucide.createIcons();
 }

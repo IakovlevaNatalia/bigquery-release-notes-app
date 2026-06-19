@@ -1069,3 +1069,145 @@ body {
         align-items: flex-start;
     }
 }
+
+/* -------------------------------------------------------------
+   Light Mode Overrides & Helper Classes
+   ------------------------------------------------------------- */
+body.light-mode {
+    --bg-primary: #f3f4f6;
+    --bg-secondary: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.65);
+    --bg-card-hover: rgba(255, 255, 255, 0.95);
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(66, 133, 244, 0.5);
+    
+    /* Neon Accents Adjustments for light background */
+    --accent-blue-glow: rgba(0, 150, 255, 0.1);
+    --accent-green-glow: rgba(16, 185, 129, 0.1);
+    --accent-red-glow: rgba(239, 68, 68, 0.1);
+    --accent-gold-glow: rgba(245, 158, 11, 0.1);
+    
+    /* Text Colors */
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+}
+
+/* Light mode specific UI adjustments */
+body.light-mode .bg-glow {
+    opacity: 0.06;
+}
+
+body.light-mode #searchInput,
+body.light-mode #tweetTextarea {
+    background-color: rgba(255, 255, 255, 0.85);
+    color: #111827;
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode #searchInput::placeholder,
+body.light-mode #tweetTextarea::placeholder {
+    color: #9ca3af;
+}
+
+body.light-mode .modal-card {
+    background-color: #ffffff;
+    border-color: rgba(0, 0, 0, 0.15);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .modal-header,
+body.light-mode .modal-footer {
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .note-preview-box {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+body.light-mode .note-preview-box .preview-snippet {
+    color: #4b5563;
+}
+
+body.light-mode .chip:not(.active) {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+body.light-mode .chip:not(.active):hover {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode .chip:not(.active) .chip-count {
+    background-color: rgba(0, 0, 0, 0.08);
+    color: #4b5563;
+}
+
+body.light-mode .chip.active .chip-count {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+body.light-mode .btn-copy {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+body.light-mode .btn-copy:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .note-body code {
+    background-color: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.05);
+    color: #d01716;
+}
+
+body.light-mode .skeleton-card {
+    background: linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.03) 25%,
+        rgba(0, 0, 0, 0.08) 50%,
+        rgba(0, 0, 0, 0.03) 75%
+    );
+    background-size: 200% 100%;
+}
+
+body.light-mode .status-text {
+    color: #4b5563;
+}
+
+body.light-mode .brand-text h1 {
+    background: linear-gradient(to right, #111827, #4b5563);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Custom styling for the Theme Toggle button */
+.btn-theme-toggle {
+    padding: 12px;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50% !important;
+}
+
+.btn-theme-toggle svg {
+    width: 20px;
+    height: 20px;
+    color: var(--text-secondary);
+    transition: var(--transition-fast);
+}
+
+.btn-theme-toggle:hover svg {
+    color: var(--accent-gold);
+    transform: rotate(45deg);
+}
+
+body.light-mode .btn-theme-toggle:hover svg {
+    color: var(--google-blue);
+    transform: rotate(-15deg);
+}
+
