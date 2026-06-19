@@ -185,11 +185,17 @@ async function fetchReleaseNotes(forceRefresh = false) {
             syncStatus.textContent = `Sync warning: ${res.message}`;
             syncStatus.parentElement.querySelector('.status-dot').style.backgroundColor = '#fbbc05';
             syncStatus.parentElement.querySelector('.status-dot').style.boxShadow = '0 0 8px #fbbc05';
+            showToast('Offline mode: ' + res.message, 'warning');
         } else {
             const sourceStr = res.source === 'live' ? 'Synced live' : 'Fetched from cache';
             syncStatus.textContent = `${sourceStr} at ${formatTime}`;
             syncStatus.parentElement.querySelector('.status-dot').style.backgroundColor = '#10b981';
             syncStatus.parentElement.querySelector('.status-dot').style.boxShadow = '0 0 8px #10b981';
+            
+            // Show success toast on manual refresh
+            if (forceRefresh) {
+                showToast('Feed synced live successfully!', 'success');
+            }
         }
 
         // Process and display data
@@ -202,6 +208,7 @@ async function fetchReleaseNotes(forceRefresh = false) {
     } catch (error) {
         console.error("Error fetching release notes:", error);
         errorMessage.textContent = error.message || "Failed to load release notes from server.";
+        showToast('Sync failed: ' + errorMessage.textContent, 'error');
         
         // Only show full error screen if we have no current notes to display
         if (allNotes.length === 0) {
@@ -528,6 +535,7 @@ function copyToClipboard(noteId, buttonElement) {
         buttonElement.innerHTML = `<i data-lucide="check"></i><span>Copied!</span>`;
         buttonElement.classList.add('copied');
         lucide.createIcons();
+        showToast('Update details copied to clipboard!', 'success');
 
         setTimeout(() => {
             buttonElement.innerHTML = originalHTML;
@@ -536,7 +544,7 @@ function copyToClipboard(noteId, buttonElement) {
         }, 2000);
     }).catch(err => {
         console.error('Failed to copy to clipboard: ', err);
-        alert('Failed to copy to clipboard. Please check browser permissions.');
+        showToast('Failed to copy to clipboard. Please check browser permissions.', 'error');
     });
 }
 
@@ -556,9 +564,11 @@ function exportFilteredToCSV() {
     }
 
     if (filtered.length === 0) {
-        alert('No notes in the current view to export.');
+        showToast('No notes in the current view to export.', 'warning');
         return;
     }
+
+    showToast(`Exporting ${filtered.length} notes to CSV...`, 'info');
 
     // 2. Build CSV rows
     const headers = ['ID', 'Date', 'ISO Date', 'Type', 'Content', 'Link'];
@@ -621,4 +631,46 @@ function toggleTheme() {
     // Update button icon (if light mode, show moon icon to swap back; if dark, show sun)
     themeToggleIcon.setAttribute('data-lucide', isLightMode ? 'moon' : 'sun');
     lucide.createIcons();
+}
+
+// Display a sleek custom toast notification
+function showToast(message, type = 'success') {
+    const toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    let iconName = 'check-circle';
+    if (type === 'error') iconName = 'alert-circle';
+    if (type === 'info') iconName = 'info';
+    if (type === 'warning') iconName = 'alert-triangle';
+
+    toast.innerHTML = `
+        <i data-lucide="${iconName}" class="toast-icon"></i>
+        <span class="toast-message">${message}</span>
+        <button class="toast-close" title="Close notification">&times;</button>
+    `;
+
+    // Hook close button click listener
+    toast.querySelector('.toast-close').addEventListener('click', () => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    });
+
+    toastContainer.appendChild(toast);
+    lucide.createIcons();
+
+    // Trigger slide-in
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    // Auto-dismiss after 4 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 4000);
 }
